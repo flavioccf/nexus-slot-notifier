@@ -24,8 +24,6 @@ const App = () => {
         const data = await response.json();
 
         setLastUpdate(new Date().toLocaleTimeString());
-
-        sendNotification(data.availableSlots.length);
   
         if (data.availableSlots && data.availableSlots.length > 0) {
           setSlots(data.availableSlots);
@@ -37,7 +35,7 @@ const App = () => {
     };
   
     // Check for available slots every 30 seconds
-    const interval = setInterval(checkAvailableSlots, 30000);
+    const interval = setInterval(checkAvailableSlots, 15000);
   
     // Initial check
     checkAvailableSlots();
