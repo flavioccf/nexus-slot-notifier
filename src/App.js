@@ -35,6 +35,8 @@ const App = () => {
         if (data.availableSlots && data.availableSlots.length > 0) {
           setSlots(data.availableSlots);
           sendNotification(data.availableSlots.length, new Date().toLocaleTimeString());
+        } else {
+          setSlots([]);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
