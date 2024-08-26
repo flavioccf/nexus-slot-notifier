@@ -54,6 +54,9 @@ const App = () => {
   
 
   const requestNotificationPermission = () => {
+    if (Notification.permission === 'granted') {
+      new Notification('Notifications already enabled!');
+    }
     if (Notification.permission !== 'granted') {
       Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
