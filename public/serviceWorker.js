@@ -49,3 +49,45 @@ self.addEventListener('push', function(event) {
     icon: 'path-to-icon.png',
   });
 });
+
+const checkAvailableSlots = async () => {
+  try {
+    const response = await fetch(
+      "https://ttp.cbp.dhs.gov/schedulerapi/slot-availability?locationId=5020"
+    );
+    const data = await response.json();
+    const time = new Date().toLocaleTimeString();
+
+    const dataWithTime = {
+      ...data,
+      fetchTime: time,
+    };
+
+    return dataWithTime;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
+setInterval(async () => {
+  const data = await checkAvailableSlots();
+  if (data.availableSlots.length > 0) {
+    self.registration.showNotification(
+      `There are ${data.availableSlots.length} available slots!`,
+      {
+        body: `At ${data.fetchTime}`,
+        icon: 'path-to-icon.png',
+      }
+    );
+  }
+  // postMessage to main thread
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => {
+      client.postMessage({
+        title: `There are ${data.availableSlots.length} available slots!`,
+        body: `At ${data.fetchTime}`,
+        details: data,
+      });
+    });
+  });
+}, 5000);

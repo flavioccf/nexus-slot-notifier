@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -63,41 +63,21 @@ const App = () => {
     }
   };
 
-  useEffect(() => {
-    const checkAvailableSlots = async () => {
-      try {
-        const response = await fetch(
-          "https://ttp.cbp.dhs.gov/schedulerapi/slot-availability?locationId=5020"
-        );
-        const data = await response.json();
-        const time = new Date().toLocaleTimeString();
+      // listen to messages from service worker
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        const data = event.data;
+        console.log("Received message from service worker", data);
 
-        setLastUpdate(time);
+        setSlots((prevSlots) => [data.details, ...prevSlots]);
+        setLastUpdate(data.details.fetchTime);
 
-        const dataWithTime = {
-          ...data,
-          fetchTime: time,
-        };
-
-        setSlots((prevSlots) => [dataWithTime, ...prevSlots]);
-
-        if (data.availableSlots && data.availableSlots.length > 0) {
-          sendNotificationViaPush(
-            data.availableSlots.length,
-            new Date().toLocaleTimeString()
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    const interval = setInterval(checkAvailableSlots, 5000);
-
-    checkAvailableSlots();
-
-    return () => clearInterval(interval);
-  }, []);
+        // if (data.availableSlots && data.availableSlots.length > 0) {
+        //   sendNotificationViaPush(
+        //     data.availableSlots.length,
+        //     new Date().toLocaleTimeString()
+        //   );
+        // }
+      });
 
   const requestNotificationPermission = () => {
     if ("Notification" in window) {
