@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Box,
+  Button,
   Card,
   CardBody,
   CardHeader,
@@ -53,17 +54,16 @@ const App = () => {
     "Notification" in window ? Notification.permission : "unsupported"
   );
 
+  const sendNotificationViaPush = (slotCount, lastUpdate) => {
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        title: `There are ${slotCount} available slots!`,
+        body: `At ${lastUpdate}`,
+      });
+    }
+  };
+
   useEffect(() => {
-
-    const sendNotificationViaPush = (slotCount, lastUpdate) => {
-      if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          title: `There are ${slotCount} available slots!`,
-          body: `At ${lastUpdate}`,
-        });
-      }
-    };
-
     const checkAvailableSlots = async () => {
       try {
         const response = await fetch(
@@ -170,6 +170,22 @@ const App = () => {
                   {slot.availableSlots.length} Slots Available - Fetch at {slot.fetchTime}
                 </Text>
               ))}
+            </Stack>
+          </CardBody>
+        </Card>
+      </Container>
+      <Container p={6}>
+        <Card>
+          <CardHeader>
+            <Heading size="md">Notification Test</Heading>
+          </CardHeader>
+          <CardBody>
+            <Stack divider={<StackDivider />} spacing="4">
+              <Box>
+                <Button onClick={() => { sendNotificationViaPush(5, new Date().toLocaleTimeString()) }}>
+                  Send Test Notification
+                </Button>
+              </Box>
             </Stack>
           </CardBody>
         </Card>

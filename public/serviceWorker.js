@@ -1,30 +1,6 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/5.1.2/workbox-sw.js');
 
 // Cache assets during the install step
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open('slot-notifier-v1').then(cache => {
-      return cache.addAll([
-        '/',
-        '/index.html',
-        '/manifest.json',
-        '/static/js/bundle.js',
-        '/logo192.png',
-        '/logo512.png',
-      ]);
-    })
-  );
-});
-
-self.addEventListener('activate', function(event) {
-  event.waitUntil(
-    self.clients.claim()
-  );
-});
-
-if (workbox.navigationPreload.isSupported()) {
-  workbox.navigationPreload.enable();
-}
 
 // Fetch assets from cache
 self.addEventListener('fetch', event => {
