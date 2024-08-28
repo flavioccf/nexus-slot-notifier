@@ -24,15 +24,19 @@ if ("serviceWorker" in navigator) {
         );
 
         // Check if Notification permission has been granted
-        if (Notification.permission === "granted") {
-          new Notification("You will be notified when slots are available!");
-        } else if (Notification.permission !== "denied") {
-          // Ask for permission if not already denied
-          Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-              new Notification("You will be notified when slots are available!");
-            }
-          });
+        if ("Notification" in window) {
+          if (Notification.permission === "granted") {
+            new Notification("You will be notified when slots are available!");
+          } else if (Notification.permission !== "denied") {
+            // Ask for permission if not already denied
+            Notification.requestPermission().then(permission => {
+              if (permission === "granted") {
+                new Notification("You will be notified when slots are available!");
+              }
+            });
+          }
+        } else {
+          console.log("Notifications are not supported in this browser.");
         }
       },
       function (error) {
@@ -42,19 +46,21 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-
 const App = () => {
   const [slots, setSlots] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(null);
-
-  const [permission, setPermission] = useState(Notification.permission);
+  const [permission, setPermission] = useState(
+    "Notification" in window ? Notification.permission : "unsupported"
+  );
 
   useEffect(() => {
-    const sendNotification = (slotCount, lastUpdate) => {
-      if (Notification.permission === "granted") {
-        new Notification(
-          `There are ${slotCount} available slots! At ${lastUpdate}`
-        );
+
+    const sendNotificationViaPush = (slotCount, lastUpdate) => {
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          title: `There are ${slotCount} available slots!`,
+          body: `At ${lastUpdate}`,
+        });
       }
     };
 
@@ -76,7 +82,7 @@ const App = () => {
         setSlots((prevSlots) => [dataWithTime, ...prevSlots]);
 
         if (data.availableSlots && data.availableSlots.length > 0) {
-          sendNotification(
+          sendNotificationViaPush(
             data.availableSlots.length,
             new Date().toLocaleTimeString()
           );
@@ -86,7 +92,7 @@ const App = () => {
       }
     };
 
-    const interval = setInterval(checkAvailableSlots, 7000);
+    const interval = setInterval(checkAvailableSlots, 5000);
 
     checkAvailableSlots();
 
@@ -94,18 +100,22 @@ const App = () => {
   }, []);
 
   const requestNotificationPermission = () => {
-    if (Notification.permission === "granted") {
-      new Notification("Notifications already enabled!");
-      setPermission("granted");
-    }
-    if (Notification.permission !== "granted") {
-      setPermission("denied");
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          setPermission("granted");
-          new Notification("Notifications enabled! You");
-        }
-      });
+    if ("Notification" in window) {
+      if (Notification.permission === "granted") {
+        new Notification("Notifications already enabled!");
+        setPermission("granted");
+      } else if (Notification.permission !== "granted") {
+        Notification.requestPermission().then((permission) => {
+          if (permission === "granted") {
+            setPermission("granted");
+            new Notification("Notifications enabled! You");
+          } else {
+            setPermission("denied");
+          }
+        });
+      }
+    } else {
+      console.log("Notifications are not supported in this browser.");
     }
   };
 
@@ -129,7 +139,7 @@ const App = () => {
             </Stack>
           </CardBody>
         </Card>
-        </Container>
+      </Container>
       <Container p={6}>
         <Card>
           <CardHeader>
@@ -146,6 +156,7 @@ const App = () => {
                     id="enableNotifications"
                     isChecked={permission === "granted"}
                     onChange={requestNotificationPermission}
+                    isDisabled={permission === "unsupported"}
                   />
                 </FormLabel>
               </Box>
@@ -153,12 +164,12 @@ const App = () => {
                 <Heading size="xs" textTransform="uppercase">
                   Available Slots Listing
                 </Heading>
-                </Box>
-                {slots.slice(0, 6).map((slot, index) => (
-                  <Text pt="2" fontSize="sm" key={index}>
-                    {slot.availableSlots.length} Slots Available - Fetch at {slot.fetchTime}
-                  </Text>
-                ))}
+              </Box>
+              {slots.slice(0, 6).map((slot, index) => (
+                <Text pt="2" fontSize="sm" key={index}>
+                  {slot.availableSlots.length} Slots Available - Fetch at {slot.fetchTime}
+                </Text>
+              ))}
             </Stack>
           </CardBody>
         </Card>
