@@ -22,7 +22,18 @@ if ("serviceWorker" in navigator) {
           "ServiceWorker registration successful with scope: ",
           registration.scope
         );
-        new Notification("You will be notified when slots are available!");
+
+        // Check if Notification permission has been granted
+        if (Notification.permission === "granted") {
+          new Notification("You will be notified when slots are available!");
+        } else if (Notification.permission !== "denied") {
+          // Ask for permission if not already denied
+          Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+              new Notification("You will be notified when slots are available!");
+            }
+          });
+        }
       },
       function (error) {
         console.log("ServiceWorker registration failed: ", error);
@@ -30,6 +41,7 @@ if ("serviceWorker" in navigator) {
     );
   });
 }
+
 
 const App = () => {
   const [slots, setSlots] = useState([]);
