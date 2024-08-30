@@ -79,15 +79,15 @@ setInterval(async () => {
         icon: 'path-to-icon.png',
       }
     );
-  }
-  // postMessage to main thread
-  self.clients.matchAll().then(clients => {
-    clients.forEach(client => {
-      client.postMessage({
-        title: `There are ${data.availableSlots.length} available slots!`,
-        body: `At ${data.fetchTime}`,
-        details: data,
+      // postMessage to main thread
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          title: `There are ${data.availableSlots.length} available slots!`,
+          body: `At ${data.fetchTime}`,
+          details: data,
+        });
       });
     });
-  });
-}, 5000);
+  }
+}, 500);
